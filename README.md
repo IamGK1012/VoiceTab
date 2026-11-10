@@ -2,20 +2,32 @@
 
 VoiceTab is a festival till that turns spoken orders and corrections into itemized bills. The customer scans a QR code and pays from their phone. After payment, the stall can review and confirm a voice-requested partial refund.
 
-## Run locally
+## Try VoiceTab as a judge
 
-Install Node.js 22.13 or newer, then run these commands from this directory.
+[Watch the 90-second demo](https://youtu.be/bkx2N983crI) or run the same order, checkout, and refund flow locally. The local walkthrough uses simulated payments and needs no account, API key, microphone, or second device.
+
+Install Node.js 22.13 or newer and run:
 
 ```sh
+git clone https://github.com/IamGK1012/VoiceTab.git
+cd VoiceTab
 npm ci
 npm start
 ```
 
-Open [the till](http://localhost:3000). The default local simulation uses a small sample-command parser and simulated payments. It needs no external keys, and both screens label this mode.
+Open [the till](http://localhost:3000) and leave the terminal running.
 
-1. Select **Try sample order**. The sample changes two lemonades to three and immediately prints the $10 bill. You can also record for up to 30 seconds or type an order and select **Create bill**. With browser speech recognition, **Live bill** updates locally as words arrive. When a clear order is followed by about a second of quiet, VoiceTab saves and prints the final bill.
-2. Select **Show customer QR** and open the customer bill in another tab. Select **Looks right — pay**, then approve the simulated payment. **Something’s wrong** flags the bill at the till and invalidates that QR. Use a fresh QR after checking the order.
-3. Return to the till. When the order shows **Paid**, choose **Try sample refund** to remove the sandwich. Confirm the $4 refund. The receipt updates to $6 net paid.
+| Step | What to click | What you should see |
+| --- | --- | --- |
+| 1. Take the order | **Try sample order** | The correction replaces two lemonades with three. The printed bill shows three lemonades and one sandwich for **$10.00**. |
+| 2. Pay as the customer | **Show customer QR** → **Open customer bill** → **Looks right — pay** → **Approve simulated payment** | The customer tab shows a paid receipt and a pickup number. |
+| 3. Refund one item | Return to the till and choose **Try sample refund**, then confirm the refund. | The sandwich refund is **$4.00**. The receipt shows **Partially refunded** and **$6.00** net paid. |
+
+To try the live microphone and actual test transactions, follow [Run with Gemini and PayPal Sandbox](#run-with-gemini-and-paypal-sandbox) below.
+
+### Try your own order
+
+Record for up to 30 seconds or type an order and select **Create bill**. With browser speech recognition, **Live bill** updates locally as words arrive. When a clear order is followed by about a second of quiet, VoiceTab saves and prints the final bill. **Something’s wrong** flags the bill at the till and invalidates that QR. Use a fresh QR after checking the order.
 
 While recording, the stall shows the live transcript and animates changes to item quantities and prices. Use **Edit transcript** to stop listening and correct the text before submitting. Say **charge** or **bill it** to open the customer QR for a complete order. The customer still approves payment on their own screen.
 
