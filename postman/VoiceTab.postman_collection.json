@@ -1,0 +1,510 @@
+{
+  "info": {
+    "name": "VoiceTab local simulation smoke test",
+    "description": "Run the full collection against an isolated, loopback-only local simulation. It creates a simulated $10 order and $4 refund. No provider credentials are needed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:3010"
+    },
+    {
+      "key": "stall_key",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Verify local simulation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Local simulation and eight menu items', () => { pm.expect(body.demo).to.equal(true); pm.expect(body.menu).to.have.lengthOf(8); });",
+              "if (body.demo !== true) pm.execution.setNextRequest(null);",
+              "pm.variables.set('demo_ready', String(body.demo === true));",
+              "pm.collectionVariables.set('sales_date', new Date().toISOString().slice(0, 10));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/config"
+      }
+    },
+    {
+      "name": "Preview live speech correction",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Live bill is $10 with three lemonades', () => { pm.expect(body.cents).to.equal(1000); pm.expect(body.lines.find(line => line.id === 'lemonade').quantity).to.equal(3); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/live-bill",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"text\":\"Two lemonades and one sandwich. Actually make that three lemonades.\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create a draft",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('New draft', () => pm.expect(body.status).to.equal('draft'));",
+              "pm.collectionVariables.set('order_id', body.id);",
+              "pm.collectionVariables.set('order_version', body.version);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Save the corrected bill",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Saved three lemonades and one sandwich for $10', () => { pm.expect(body.order.total).to.equal(1000); pm.expect(body.order.lines.map(x => x.quantity)).to.eql([3, 1]); pm.expect(body.showQr).to.equal(true); });",
+              "pm.collectionVariables.set('order_version', body.order.version);",
+              "pm.collectionVariables.set('order_number', body.order.number);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/orders/{{order_id}}/preview",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"version\":{{order_version}},\"text\":\"Two lemonades and one sandwich. Actually make that three lemonades. Bill it.\",\"commit\":true}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Generate the customer QR",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Unique customer link and PNG QR', () => { pm.expect(body.url).to.match(/\\/pay\\/[a-f0-9-]{36}$/); pm.expect(body.image).to.match(/^data:image\\/png;base64,/); });",
+              "pm.collectionVariables.set('checkout_token', body.url.split('/').pop());"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/orders/{{order_id}}/qr"
+      }
+    },
+    {
+      "name": "Start simulated checkout",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Simulated approval link', () => { pm.expect(body.id).to.match(/^DEMO-/); pm.expect(body.approvalUrl).to.include('?demo=1'); });",
+              "pm.collectionVariables.set('payment_token', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/customer/orders/{{checkout_token}}/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"version\":{{order_version}}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Capture the simulated $10",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Payment completed', () => { pm.expect(body.status).to.equal('paid'); pm.expect(body.capture.status).to.equal('COMPLETED'); pm.expect(body.total).to.equal(1000); });",
+              "pm.collectionVariables.set('order_version', body.version);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/customer/orders/{{checkout_token}}/capture",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"token\":\"{{payment_token}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Mark the pickup served",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Pickup served while order stays paid', () => { pm.expect(body.servedAt).to.be.a('string'); pm.expect(body.status).to.equal('paid'); });",
+              "pm.collectionVariables.set('order_version', body.version);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/orders/{{order_id}}/serve",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"version\":{{order_version}}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Preview a $4 sandwich refund",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Only the sandwich is refunded', () => { pm.expect(body.cents).to.equal(400); pm.expect(body.lines.map(x => x.id)).to.eql(['sandwich']); });",
+              "pm.collectionVariables.set('refund_operations', JSON.stringify(body.operations));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/orders/{{order_id}}/preview",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"version\":{{order_version}},\"text\":\"Refund one sandwich\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Confirm the partial refund",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Refund completed; net paid is $6', () => { pm.expect(body.refund.status).to.equal('COMPLETED'); pm.expect(body.total - body.refund.cents).to.equal(600); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/orders/{{order_id}}/refund",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"version\":{{order_version}},\"operations\":{{refund_operations}}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Reconcile the sales report",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('demo_ready') !== 'true') throw new Error('Start with the Verify local simulation request.');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Completed refund appears in sales', () => { pm.expect(body.refunds.some(x => x.number === Number(pm.collectionVariables.get('order_number')) && x.cents === 400)).to.equal(true); pm.expect(body.net).to.equal(body.gross - body.refundTotal); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-stall-key",
+            "value": "{{stall_key}}"
+          }
+        ],
+        "url": "{{base_url}}/api/stall/sales?date={{sales_date}}&timeZone=UTC"
+      }
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const base = pm.variables.get('base_url');",
+          "if (!/^http:\\/\\/(127\\.0\\.0\\.1|localhost):\\d+$/.test(base)) throw new Error('Use a loopback URL for this simulation collection.');"
+        ]
+      }
+    }
+  ]
+}

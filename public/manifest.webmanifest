@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "VoiceTab",
+  "short_name": "VoiceTab",
+  "description": "Take orders by voice and print a customer bill.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fafaf7",
+  "theme_color": "#2f5bff",
+  "icons": [
+    { "src": "/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "voicetab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "test": "node --test",
+    "check:apis": "node --env-file-if-exists=.env scripts/check-apis.mjs"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}

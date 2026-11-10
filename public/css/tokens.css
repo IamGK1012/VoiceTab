@@ -1,0 +1,78 @@
+@font-face { font-family: Geist; src: url('/fonts/geist-sans.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url('/fonts/geist-mono.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+
+:root {
+  color-scheme: light;
+  --canvas: light-dark(#fafaf7, #0b0d10);
+  --surface: light-dark(#fff, #14171c);
+  --surface-alt: light-dark(#f3f4f8, #1b2028);
+  --ink: light-dark(#0e1116, #f2f3f5);
+  --muted: light-dark(#525c6b, #aeb8c7);
+  --line: light-dark(#e6e6e1, #2b3039);
+  --line-strong: light-dark(#bcc4d2, #535f73);
+  --accent: light-dark(#2f5bff, #96a9ff);
+  --accent-ink: light-dark(#2646c4, #aebdff);
+  --accent-soft: light-dark(#e8edff, #202b54);
+  --on-accent: light-dark(#fff, #101a3b);
+  --success: light-dark(#08743a, #73d99d);
+  --success-soft: light-dark(#e7f7ed, #18362a);
+  --warning: light-dark(#795400, #f4cd76);
+  --warning-soft: light-dark(#fff3d5, #392d19);
+  --error: light-dark(#a72833, #ffa5ad);
+  --error-soft: light-dark(#fcebee, #3c222a);
+  --device: #242c3e;
+  --device-edge: #131a28;
+  --device-detail: #7d8ba6;
+  --device-label: #e0e7f6;
+  --device-light: #8df0b4;
+  --qr-paper: #fff;
+  --shadow-sm: 0 2px 6px #10192b09;
+  --shadow-md: 0 6px 16px #0d17351f;
+  --font-ui: Geist, system-ui, sans-serif;
+  --font-mono: "Geist Mono", monospace;
+  --text-xs: .75rem;
+  --text-sm: .875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 3rem;
+  --leading-tight: 1.2;
+  --leading-body: 1.5;
+  --tracking-tight: -.045em;
+  --tracking-label: .07em;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-input: 8px;
+  --radius-card: 12px;
+  --radius-sheet: 20px;
+  --radius-pill: 999px;
+  --border: 1px;
+  --focus: 2px;
+  --target: 48px;
+  --icon: 20px;
+  --layout: 1120px;
+  --checkout: 460px;
+  --sales-width: 860px;
+  --printer-width: 350px;
+  --receipt-width: 292px;
+  --qr-width: 148px;
+  --qr-compact: 112px;
+  --brand-stage: 216px;
+  --brand-sample: 108px;
+  --brand-lockup: 360px;
+  --brand-compact: 164px;
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-paid: 600ms;
+  --dur-feed: 560ms;
+  --ease-out: cubic-bezier(.2, 0, 0, 1);
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
